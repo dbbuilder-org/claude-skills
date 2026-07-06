@@ -1,0 +1,34 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      gpt-tokenizer:
+        specifier: ^3.4.0
+        version: 3.4.0
+      pxpipe-proxy:
+        specifier: ^0.8.0
+        version: 0.8.0
+
+packages:
+
+  gpt-tokenizer@3.4.0:
+    resolution: {integrity: sha512-wxFLnhIXTDjYebd9A9pGl3e31ZpSypbpIJSOswbgop5jLte/AsZVDvjlbEuVFlsqZixVKqbcoNmRlFDf6pz/UQ==}
+
+  pxpipe-proxy@0.8.0:
+    resolution: {integrity: sha512-zmh319/seaTOGG46TYq+kGk/RcXSuBcfHENNsIriuqqKiJWd6709DNQfqzf6J+lL+Nc1QtOg5F/TNIOe7YeTBQ==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+snapshots:
+
+  gpt-tokenizer@3.4.0: {}
+
+  pxpipe-proxy@0.8.0:
+    dependencies:
+      gpt-tokenizer: 3.4.0
