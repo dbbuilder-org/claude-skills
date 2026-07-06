@@ -6,8 +6,8 @@ description: Render a large clipboard or file blob to dense PNG pages via pxpipe
 # paste-as-image
 
 Turns a large blob — sourced from the **clipboard or a file, never the prompt
-textbox** — into dense PNG pages using the local pxpipe renderer, then loads them
-as images. The raw text is never tokenized in the prompt.
+textbox** — into dense PNG pages via pxpipe, then loads them as images. The raw
+text is never tokenized in the prompt.
 
 ## When to use
 
@@ -18,42 +18,53 @@ as images. The raw text is never tokenized in the prompt.
 **Do not use** for content that must be reproduced byte-exact (credentials,
 hashes, exact IDs, code you'll edit). Images are lossy on dense exact strings.
 
-## One-time setup
+## Preferred path: the `px-pipe-mcp` MCP tools (one step)
 
-The skill is self-contained but needs its deps installed once:
+If the **px-pipe-mcp** MCP server is connected, use its tools — they render AND
+return the image blocks in a single call, so there is no script to run and no
+separate Read. Check with `/mcp` or by whether these tools are available:
 
+| Situation | Call |
+|---|---|
+| User copied the content | `paste_clipboard_as_image` |
+| User named a file | `render_file_as_image` `{ path: "/abs/path" }` |
+| Content came from another tool result | `render_text_as_image` `{ text: "..." }` |
+
+Optional args on every tool: `minChars` (default 2000), `exact` (true = keep as
+text). The result is a text summary (`N text tokens -> M image tokens (~X%
+saved)` plus any warnings) followed by one image block per page — **read the
+images and answer from them**, and relay the savings + any warnings to the user.
+
+Setup, if the tools aren't listed:
+```bash
+cd ~/dev2/px-pipe-mcp && pnpm install
+claude mcp add --scope user px-pipe-mcp -- node ~/dev2/px-pipe-mcp/server.mjs
+# then restart Claude Code so the tools load
+```
+Repo: https://github.com/dbbuilder-org/px-pipe-mcp
+
+## Fallback path: the local `render.mjs` script
+
+Use this only when the MCP tools are not available (e.g. MCP not yet loaded in
+this session). First-time deps:
 ```bash
 cd ~/.claude/skills/paste-as-image && pnpm install
 ```
-
-## How to run it
-
-Pick the source and run `render.mjs`:
-
+Run it and then Read the PNGs it writes:
 ```bash
-# from the clipboard (default)
-node ~/.claude/skills/paste-as-image/render.mjs
-
-# from a file
-node ~/.claude/skills/paste-as-image/render.mjs --file /abs/path/to/blob.log
-
-# force plain text (content must stay byte-exact)
-node ~/.claude/skills/paste-as-image/render.mjs --exact
+node ~/.claude/skills/paste-as-image/render.mjs                       # clipboard
+node ~/.claude/skills/paste-as-image/render.mjs --file /abs/blob.log  # file
+node ~/.claude/skills/paste-as-image/render.mjs --exact               # keep as text
 ```
-
 Flags: `--file <path>`, `--exact`, `--min-chars <n>` (default 2000), `--cols <n>`.
+It prints one JSON object:
+- **`ok: false`** — do NOT image; tell the user the `reason` (`no_input`,
+  `below_min_chars`, `exact_requested`, `render_error`) and use the content as text.
+- **`ok: true`** — **Read** each path in `pages[]` to load the images, then relay
+  `savedPct` and surface any `warnings` verbatim. Answer from the images.
 
-## Interpreting the result
+## Fidelity note (both paths)
 
-The script prints one JSON object.
-
-- **`ok: false`** — do NOT image. Tell the user the `reason`
-  (`no_input`, `below_min_chars`, `exact_requested`, `render_error`) and use the
-  content as plain text instead.
-- **`ok: true`** — use the **Read** tool on each path in `pages[]` to load the
-  images into context. Then relay `savedPct` (e.g. "imaged 91k chars, ~92% fewer
-  tokens") and surface any `warnings` verbatim. Answer from the images.
-
-If `warnings` mentions code/exact data, tell the user the imaged copy is
-gist-level and offer to re-run with `--exact` (kept as text) if they need
-verbatim fidelity.
+If a result's warnings mention code/exact data, tell the user the imaged copy is
+gist-level and offer the `exact` option (kept as text) if they need verbatim
+fidelity for identifiers, hashes, or code they'll edit.
