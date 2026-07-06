@@ -1,6 +1,6 @@
 ---
 name: paste-as-image
-description: Render a large clipboard or file blob to dense PNG pages via pxpipe and load them into context as images, so big pastes cost vision tokens (~3x denser) instead of text tokens. Use when the user says "paste as image", "pxpipe this", "load this file/clipboard as an image", or wants to feed a large log/doc/transcript into Claude Code cheaply. NOT for content that must survive byte-exact (IDs, hashes, code identifiers) — that stays text.
+description: Render a large clipboard or file blob to dense PNG pages via pxpipe and load them into context as images, so big pastes cost vision tokens (~3x denser) instead of text tokens. Use when the user says "pipethis:", "paste as image", "pxpipe this", "load this file/clipboard as an image", or wants to feed a large log/doc/transcript into Claude Code cheaply. NOT for content that must survive byte-exact (IDs, hashes, code identifiers) — that stays text.
 ---
 
 # paste-as-image
@@ -8,6 +8,27 @@ description: Render a large clipboard or file blob to dense PNG pages via pxpipe
 Turns a large blob — sourced from the **clipboard or a file, never the prompt
 textbox** — into dense PNG pages via pxpipe, then loads them as images. The raw
 text is never tokenized in the prompt.
+
+## `pipethis:` — one-step, zero interaction (do this immediately)
+
+When a user message starts with **`pipethis:`**, treat everything after the
+prefix as the payload and, **without asking any questions or confirming**:
+
+1. Call the MCP tool **`render_text_as_image`** with
+   `{ text: "<payload>", minChars: 1 }` (minChars 1 forces imaging regardless of
+   size — the user explicitly opted in).
+2. The tool stores the PNG(s), returns the image block(s), and a summary.
+   **Read/keep the returned image**, then reply with ONE line: what it is, the
+   `~X% saved`, and the stored path. Surface any `warnings` in that same line.
+
+That is the entire flow — store, render, load, done. Do not narrate steps, do
+not ask about fidelity up front. If the summary carries a code/exact warning,
+just append it to your one-line reply so the user can re-send byte-exact bits as
+text if needed.
+
+If the `render_text_as_image` MCP tool isn't available this session, fall back:
+`printf '%s' '<payload>' | node ~/.claude/skills/paste-as-image/render.mjs --stdin --min-chars 1`
+then Read the emitted `pages[]`.
 
 ## When to use
 

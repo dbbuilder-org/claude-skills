@@ -16,10 +16,11 @@ import { encode } from 'gpt-tokenizer';
 
 // ── arg parsing ──────────────────────────────────────────────────────────────
 function parseArgs(argv) {
-  const opts = { file: null, exact: false, minChars: 2000, cols: undefined };
+  const opts = { file: null, stdin: false, exact: false, minChars: 2000, cols: undefined };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--file') opts.file = argv[++i];
+    else if (a === '--stdin') opts.stdin = true;
     else if (a === '--exact') opts.exact = true;
     else if (a === '--min-chars') opts.minChars = Number(argv[++i]);
     else if (a === '--cols') opts.cols = Number(argv[++i]);
@@ -35,6 +36,11 @@ function emit(obj, code) {
 // ── source resolution ────────────────────────────────────────────────────────
 function readSource(opts) {
   if (opts.file) return readFileSync(opts.file, 'utf8');
+  // --stdin forces reading piped input (used by the `pipethis:` fallback), so a
+  // non-empty clipboard can't shadow the intended payload.
+  if (opts.stdin) {
+    try { return readFileSync(0, 'utf8'); } catch { return ''; }
+  }
   // clipboard (macOS pbpaste); if empty or unavailable, fall through to stdin
   try {
     const clip = execFileSync('pbpaste', { encoding: 'utf8' });
