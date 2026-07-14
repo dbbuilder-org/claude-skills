@@ -22,7 +22,7 @@ audiences (strategy, academia, the C-suite).
 Phase 1  ANALYZE & IDENTIFY   → docs/ROI/ROI-ANALYSIS.md   (name ONE highest-ROI thesis)
 Phase 2  ROADMAP              → docs/ROI/ROI-ROADMAP.md    (how to deliver it)
 Phase 3  ACADEMIC PAPER       → docs/ROI/<slug>-academic.pdf (+.tex)  (prove it, rigorously)
-Phase 4  HBR ARTICLE          → docs/ROI/<slug>-hbr.pdf (+.md)        (sell it, to a CFO/CTO)
+Phase 4  HBR ARTICLE          → docs/ROI/<slug>-hbr.pdf (+.tex)       (sell it, to a CFO/CTO)
          + docs/ROI/README.md (index + rebuild commands)
 ```
 
@@ -40,7 +40,7 @@ Worked reference implementation (canonical example of the output shape):
 | 1 | `ROI-ANALYSIS.md` | Internal / founder | 1 |
 | 2 | `ROI-ROADMAP.md` | Product / eng leadership | 2 |
 | 3 | `<slug>-academic.pdf` (+`.tex`) | Technical / academic | 3 |
-| 4 | `<slug>-hbr.pdf` (+`.md`) | CFO / CTO / board | 4 |
+| 4 | `<slug>-hbr.pdf` (+`.tex`, +exhibit `.png`) | CFO / CTO / board | 4 |
 | 5 | `README.md` | anyone opening the folder | after 4 |
 
 `<slug>` = short project name (e.g., `mindspace`, `acme-billing`).
@@ -148,30 +148,47 @@ rm -f *.aux *.log *.out   # remove aux (explicit names — zsh aborts on a no-ma
 
 ## Phase 4 — HBR-style business article (CFO/CTO-ready, → PDF)
 
-**Goal:** an executive who reads five pages funds the thing. HBR voice: authoritative, narrative,
-one big idea, a memorable framework, concrete stakes.
+**Goal:** an executive who reads it funds the thing. HBR voice: authoritative, narrative, one big
+idea, a memorable framework, concrete stakes.
 
-Start from `references/hbr-article-template.md`. Structure:
-- **Title + deck** — a hook that names the pain and the reframe (not the product).
-- **Opening** — the problem an executive *feels* (cost leak, risk, missed advantage), in their language.
-- **Idea in brief** — the thesis in one tight passage.
-- **Why the obvious fixes fall short** — dispatch the alternatives.
-- **The reframe** — the mechanism from Phase 1, in business terms.
-- **A framework / 2×2** — an ASCII matrix placing the alternatives on the two axes that matter to the
-  business (e.g., adoption-cost × outcome-visibility). One quadrant should be yours.
-- **The flywheel** — why the advantage compounds.
-- **The numbers in business terms** — the honest ranking from Phase 1; lead with the provable ones,
-  de-rank the oversold one out loud (it's more persuasive than hype).
-- **What to do Monday** — 3–4 concrete actions for a buyer/builder.
-- **Idea-in-brief sidebar** — problem / why-usual-fixes-fail / the move / the payoff.
+**House style is LaTeX, not markdown.** Copy `references/hbr-article-template.tex` to
+`docs/ROI/<slug>-hbr.tex` and fill it. It is a two-column magazine layout (validated preamble,
+compiles with `pdflatex`) matching `~/dev2/aicostoptimize/docs/ROI/hbr-cfo-article.tex` and
+`~/dev2/aicostmemory/docs/ROI/mindspace-hbr.tex`. Its elements, in order:
+- **Kicker** — red small-caps `SECTION • TOPIC` (left) + a status line (right, e.g. `INTERNAL DRAFT — STEALTH`).
+- **Title** — `\Huge` sans bold, 2–3 short `\\`-broken lines. **Do not** also repeat it as a heading (that double-titles page one).
+- **Dek** — the gray sans subtitle that reframes the problem.
+- **Byline** — `by **Author**, Company … Month Year`.
+- **Idea in Brief** — the tan `ideabrief` box: problem / why-usual-fixes-fail / the move / the payoff.
+- **Two-column body** (`multicols`) — opening (the felt pain) · why obvious fixes fall short · the reframe (the mechanism).
+- **Pull-quote** — `\pullquote{…}` (red rules) with the single most quotable line.
+- **Exhibit** — a full-width figure between the two `multicols` blocks (see below), with a gray-sans `\textbf{EXHIBIT}` caption.
+- **Two-column body** (resumed) — the flywheel · the honest ranking (de-rank the oversold headline out loud) · what to do Monday.
+- **Footer** — a rule + small-print bio referencing the companion academic paper; note the strongest claim is architectural, not numerical.
 
-### Build
+### The exhibit (the framework / 2×2) — a real graphic, not ASCII
+Prefer **Mermaid → PNG** for a 2×2 (`quadrantChart`), embedded with `\includegraphics`:
 ```bash
 cd docs/ROI
-pandoc <slug>-hbr.md -o <slug>-hbr.pdf --pdf-engine=xelatex \
-  -V geometry:margin=1in -V fontsize=11pt -V mainfont="Georgia"   # drop mainfont if unavailable
+# 1. write <slug>-2x2.mmd (mermaid quadrantChart: x/y axes, quadrant labels, one point per option)
+# 2. mmdc needs a Chromium — point it at an installed browser (it won't find one by default):
+echo '{ "executablePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "args": ["--no-sandbox"] }' > /tmp/pptr.json
+mmdc -i <slug>-2x2.mmd -o <slug>-2x2.png -b white -w 1600 -s 2 -p /tmp/pptr.json
+# 3. keep quadrant labels short (<~28 chars) or they clip; verify by opening the PNG.
 ```
-**Gate 4:** PDF compiles; `pdftotext` confirms the hook, framework, and Monday actions rendered.
+Then set `\includegraphics[width=0.62\textwidth]{<slug>-2x2.png}` in the template's exhibit block.
+(Alternative: a native `tikz`/`pgfplots` chart — e.g. a savings-curve — as in the aicostoptimize template.)
+
+### Build & verify
+```bash
+cd docs/ROI
+pdflatex -interaction=nonstopmode -halt-on-error <slug>-hbr.tex   # run twice if refs/toc used
+rm -f <slug>-hbr.aux <slug>-hbr.log <slug>-hbr.out
+pdftoppm -png -r 100 -f 1 -l 1 <slug>-hbr.pdf /tmp/pg1   # eyeball page 1: no double title, clean kicker
+```
+**Gate 4:** PDF compiles; page 1 shows the kicker/title/dek/idea-brief with no duplicated title; the
+exhibit renders (not tofu/ASCII). Avoid `→`/`•` literals in body text (glyph-tofu risk) — use words
+or `\textbullet`/`$\rightarrow$`.
 
 ---
 
@@ -190,6 +207,10 @@ one-line thesis.
    limitations section and a real scope note. Overclaiming loses the technical AND the exec reader.
 5. **Cite real sources; formalize real metrics; never fabricate citations or third-party numbers.**
 6. **Verify every PDF** with `pdftotext` before declaring done; clean up LaTeX aux files.
-7. **Toolchain check first:** confirm `pdflatex`/`xelatex` and `pandoc` exist
-   (`which pdflatex xelatex pandoc`); if missing, produce the sources and note the one command the
-   user must run.
+7. **Toolchain check first:** confirm `pdflatex` and (for a Mermaid exhibit) `mmdc` exist
+   (`which pdflatex mmdc`). `mmdc` needs a Chromium — if it errors on a missing browser, point it at
+   an installed one via a puppeteer config (`executablePath`, `--no-sandbox`). If a tool is missing,
+   produce the sources and note the one command the user must run. (Both papers are LaTeX now; pandoc
+   is no longer required.)
+8. **HBR house style is LaTeX** (`references/hbr-article-template.tex`) — two-column magazine layout,
+   not pandoc/markdown. The exhibit is a real graphic (Mermaid→PNG or tikz/pgfplots), never ASCII.

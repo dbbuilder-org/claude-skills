@@ -1,0 +1,146 @@
+% docs-maximize-roi — HBR-magazine house-style template (LaTeX, pdflatex).
+% Matches ~/dev2/aicostoptimize/docs/ROI/hbr-cfo-article.tex and
+% ~/dev2/aicostmemory/docs/ROI/mindspace-hbr.tex. Two-column magazine layout:
+% red kicker, Huge sans title, gray dek, byline, "Idea in Brief" box, red
+% pull-quote, full-width EXHIBIT (image OR native chart), footer.
+% Replace every % FILL: block. Compiles with: pdflatex <slug>-hbr.tex
+\documentclass[10pt]{article}
+
+\usepackage[margin=0.95in,top=0.85in]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{graphicx}   % for an image exhibit (e.g. a Mermaid quadrantChart -> PNG)
+\usepackage{tikz}       % optional: for a native chart exhibit instead of an image
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage[hidelinks]{hyperref}
+\usepackage{microtype}
+\usepackage{helvet}     % sans for headings/labels
+\usepackage{sectsty}
+\usepackage{multicol}
+\usepackage{mdframed}
+\usepackage{enumitem}
+
+\definecolor{hbrred}{RGB}{173,31,45}
+\definecolor{hbrdark}{RGB}{35,31,32}
+\definecolor{hbrgray}{RGB}{100,100,105}
+\definecolor{hbrbg}{RGB}{245,242,236}
+
+\allsectionsfont{\sffamily\color{hbrdark}}
+\newcommand{\dek}[1]{{\large\sffamily\color{hbrgray} #1\par}}
+\newenvironment{ideabrief}
+  {\begin{mdframed}[backgroundcolor=hbrbg,linecolor=hbrred,linewidth=2pt,
+    topline=false,bottomline=false,rightline=false,
+    innerleftmargin=10pt,innerrightmargin=10pt,innertopmargin=8pt,innerbottommargin=8pt]
+   \sffamily\small}
+  {\end{mdframed}}
+\newcommand{\pullquote}[1]{%
+  \par\vspace{6pt}
+  {\noindent\color{hbrred}\rule{\linewidth}{0.6pt}}\par\vspace{4pt}
+  {\noindent\large\sffamily\itshape\color{hbrred} ``#1''}\par\vspace{4pt}
+  {\noindent\color{hbrred}\rule{\linewidth}{0.6pt}}\par\vspace{6pt}}
+
+\setlength{\parskip}{4pt}
+\setlength{\parindent}{0pt}
+\setlength{\columnsep}{22pt}
+
+\begin{document}
+
+% --- kicker: section label (left) + status (right) -------------------------
+{\sffamily\footnotesize\color{hbrred} FILL:SECTION \,\textbullet\, FILL:TOPIC \hfill FILL: INTERNAL DRAFT v0.1 --- STEALTH, NOT FOR DISTRIBUTION}
+
+\vspace{4mm}
+% --- title: keep 2-3 short lines; use \\ for the line breaks ---------------
+{\Huge\sffamily\bfseries\color{hbrdark} FILL: Line one\\ FILL: line two\\ FILL: line three.\par}
+
+\vspace{3mm}
+\dek{FILL: the deck — one or two sentences that reframe the reader's problem, in gray sans.}
+
+\vspace{2mm}
+{\sffamily\small by \textbf{FILL: Author}, FILL: Company \hfill FILL: Month Year}
+
+\vspace{4mm}
+\begin{ideabrief}
+\textbf{THE IDEA IN BRIEF}
+
+\textbf{The problem.} % FILL
+
+\textbf{Why the usual fixes fail.} % FILL
+
+\textbf{The move.} % FILL (the mechanism from the ROI analysis, in business terms)
+
+\textbf{The payoff.} % FILL (the compounding / the moat; end on the reframe line)
+\end{ideabrief}
+
+\vspace{3mm}
+\begin{multicols}{2}
+
+\section*{FILL: opening section — the pain the reader feels}
+% FILL: 2 short paragraphs in the executive's language. End on the sharp observation.
+
+\section*{FILL: why the obvious fixes fall short}
+% FILL: dispatch the alternatives; each optimizes the easy thing and ignores the valuable one.
+
+\section*{FILL: the reframe — <mechanism> in business terms}
+% FILL: the load-bearing properties, each with "remove it and you become <inferior alternative>."
+
+\pullquote{FILL: the single most quotable line — the thesis in one sentence.}
+
+% FILL: one line teeing up the Exhibit.
+
+\end{multicols}
+
+% --- full-width EXHIBIT: an image (Mermaid -> PNG) OR a native chart --------
+\begin{figure}[h]
+\centering
+% OPTION A — image exhibit (recommended for a 2x2 quadrant; render via Mermaid).
+% Uncomment and set the filename once the PNG exists:
+%   \includegraphics[width=0.62\textwidth]{FILL-exhibit.png}
+% OPTION B — native chart exhibit: a tikzpicture/pgfplots axis (see aicostoptimize
+% hbr-cfo-article.tex for a savings-curve example).
+% The framebox below is a placeholder so the template compiles as-is — replace it.
+\framebox[0.62\textwidth]{\rule{0pt}{4cm}\sffamily\color{hbrgray} FILL: exhibit (image or chart)}
+
+\vspace{1mm}
+\begin{minipage}{0.86\textwidth}
+\footnotesize\sffamily\color{hbrgray}
+\textbf{EXHIBIT} \,% FILL: caption. If projections, label them projections and state assumptions.
+\end{minipage}
+\end{figure}
+
+\begin{multicols}{2}
+
+\section*{FILL: the flywheel / why it compounds}
+% FILL: why the advantage grows with use.
+
+\section*{FILL: what the numbers actually say — in business terms}
+% FILL: the honest ranking, most->least defensible; de-rank the oversold headline out loud.
+\begin{enumerate}[leftmargin=1.4em, itemsep=2pt]
+\item \textbf{FILL: the provable near-term dollar.} % ...
+\item \textbf{FILL: the durable moat.} % ...
+\item \textbf{FILL: the compounding flywheel.} % ...
+\item \textbf{FILL: the adoption lever.} % ...
+\item \textbf{FILL: the oversold headline (de-ranked).} % real but weakest; don't lead with it.
+\end{enumerate}
+
+\section*{What to do Monday}
+\begin{itemize}[leftmargin=1.2em, itemsep=2pt]
+\item \textbf{FILL.} % concrete action
+\item \textbf{FILL.} % concrete action
+\item \textbf{FILL.} % concrete action
+\item \textbf{FILL: turn measurement into action.} % the compounding, not just reporting
+\end{itemize}
+
+% FILL: closing paragraph — the memorable last line.
+
+\end{multicols}
+
+\vspace{2mm}
+\noindent\rule{\textwidth}{0.4pt}
+
+\footnotesize\sffamily\color{hbrgray}
+\textbf{FILL: Author} % FILL: one-line bio; reference the companion academic paper; note that
+% the strongest claim is architectural, not numerical; cite real sources for any market stats.
+
+\end{document}
