@@ -1,0 +1,97 @@
+% docs-maximize-roi — academic paper template.
+% Preamble is validated against TeX Live (pdflatex, two passes). Replace every
+% % FILL: block. Keep the metric equations — formal definitions are where
+% defensibility lives. Cite REAL sources only.
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection}{0.6em}{}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{0pt}
+
+\pagestyle{fancy}\fancyhf{}
+\lhead{\small FILL: running title}
+\rhead{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+
+\newcommand{\sys}{\textsc{FILL:SystemName}}
+
+\title{\vspace{-2em}\textbf{FILL: Full Title\\ \large FILL: subtitle line}}
+\author{FILL: Author\\ \small FILL: Affiliation\\ \small \texttt{FILL: email}}
+\date{FILL: Month Year}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\begin{abstract}
+\noindent
+% FILL: 150–220 words. State the problem, the two classes of existing approaches and their
+% structural blind spot, the contribution (the MECHANISM), and the central claim — which should be
+% architectural, not numerical.
+\end{abstract}
+\vspace{0.5em}
+
+\section{Introduction}
+% FILL: the problem in economic terms; the two failure modes; the observation that unlocks the
+% mechanism; the three load-bearing properties.
+\textbf{Contributions.} % FILL: (1) architecture; (2) formal attribution metrics; (3) evaluation + claim.
+
+\section{Background and Related Work}
+% FILL: real citations grouped by theme. Position the work: adopts commodity components, contributes
+% the mechanism/position. Cite like \cite{key}.
+
+\section{System Design}
+% FILL: architecture, the request/data path, the invariants (fail-open, isolation, governance).
+
+\section{Formal Metrics / The Mechanism}
+% Define every claimed quantity. Distinguish observed vs estimated, proxy vs counterfactual.
+Let $I$ be the set of records in a window. % adapt
+\[
+\text{PrimaryRate} = \frac{|\{r \in I : \text{condition}(r)\}|}{|I|}.
+\]
+\[
+R_{\text{proxy}} = \frac{\sum_{r}\text{value}(r)}{\sum_{r}\text{cost}(r)}, \qquad
+R_{\text{true}} = \frac{\sum_{r}\big(c_{\text{base}}(r) - c_{\text{actual}}(r)\big)}{\sum_{r}\text{cost}(r)}.
+\]
+% FILL: prose explaining why R_true (the counterfactual) is the meaningful one and what makes it
+% observable only in your setting.
+
+\section{Evaluation}
+% FILL: setup, methodology (A/B matched cohorts, windows), then results.
+\begin{table}[h]\centering\small
+\caption{FILL: caption. State clearly if figures are illustrative and that the contribution is the
+mechanism producing them, not the point estimates.}
+\begin{tabular}{@{}p{0.5\linewidth}rr@{}}
+\toprule \textbf{Metric} & \textbf{Baseline} & \textbf{Treatment} \\ \midrule
+FILL & & \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\section{Discussion}
+% FILL: why the mechanism is the moat; portability/compounding; ranking the returns most→least
+% defensible with the oversold one de-ranked.
+
+\section{Limitations and Threats to Validity}
+% FILL (mandatory): single pilot; counterfactual is an estimate; privacy/scope bounds; any
+% provisioning-vs-design distinction.
+
+\section{Conclusion}
+% FILL: restate the architectural claim.
+
+\begin{thebibliography}{99}\small
+% FILL: REAL references only. Example entries:
+\bibitem{key1} Author. ``Title.'' Venue, Year.
+\end{thebibliography}
+\end{document}
