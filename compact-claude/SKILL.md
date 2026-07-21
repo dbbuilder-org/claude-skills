@@ -1,124 +1,198 @@
-# /compact-claude - Session & CLAUDE.md Token Optimizer
+# /compact-claude — Workflow-Aware Context Optimizer
 
-Analyze and optimize CLAUDE.md files AND session context using TOON format. Designed to minimize what carries between sessions in chatty, long-running projects.
+Compress session context and CLAUDE.md files using phase-aware rules.
+Understands the docs → code → tests → docs cycle and what's safe to archive at each transition.
 
 ## Trigger
-User invokes `/compact-claude` or asks to optimize/compact context, reduce tokens, or "keep only what we need."
+`/compact-claude` | "compress context" | "reduce tokens" | "slim down context" | "compact session"
 
-## Behavior
+---
 
-### Phase 1: CLAUDE.md Optimization
+## Phase 0: Detect Workflow Phase
 
-1. **Discover all CLAUDE.md files in scope:**
-   - Global: `~/CLAUDE.md`
-   - Project: `./CLAUDE.md` (current working directory)
-   - Local: `./CLAUDE.local.md`
-   - Parent dirs: Walk up from CWD checking each for CLAUDE.md
-   - Reference files: `~/.config/claude/*.md`
+Before doing anything, determine where the current session sits in the cycle:
 
-2. **Analyze each file:**
-   - Count lines and estimate tokens (~1.3 tokens/word average)
-   - Identify bloat categories:
-     - Multi-line code blocks (>3 lines) that could be inline or referenced
-     - Full sentences where bullets/phrases suffice
-     - Duplicate information across files (global vs project vs local)
-     - "Why" explanations (keep only "what" and "how")
-     - Ephemeral status that belongs in PROGRESS.md/TODO.md
-     - Credentials that belong in `~/.config/claude/credentials.md`
-     - Project-specific content sitting in global file
-     - Completed tasks still listed as pending
-     - Verbose examples when a pattern is obvious
+| Phase | Signals | Safe to compress |
+|-------|---------|-----------------|
+| **Planning/Docs** | PM plans, feedback docs, roadmap work, no open PRs | Nothing yet — this phase produces the anchors |
+| **Code** | Open feature PR, active edits, no new tests yet | Compress planning docs to file pointers |
+| **Tests** | Code committed/PR open, writing test files | Compress implementation details to git refs |
+| **Review/Docs** | Tests green, writing PR description, updating roadmap | Compress test details to pass count + commit |
+| **Idle/Cleanup** | No active PR, catching up | Full audit — archive everything stale |
 
-3. **Report findings:**
-   ```
-   File                    Lines   Est. Tokens   Bloat %
-   ~/CLAUDE.md              870      8,500         78%
-   ./CLAUDE.md              441      3,500         65%
-   ../CLAUDE.md             200      1,600         40%
-   Total auto-loaded       1,511    13,600
-   ```
+Report the detected phase before proceeding:
+```
+Detected phase: Code (open PR #112, 3 edited files, 0 new tests)
+Safe to compress: Planning docs from this session → file pointers
+```
 
-4. **Apply TOON formatting rules:**
-   - Bullets/phrases over full sentences
-   - Inline commands: `Dev server: npm run dev` (not code blocks)
-   - Tables for structured data (credentials, paths, resources)
-   - Pipe-separated values for related items on one line
-   - No code examples > 3 lines (reference external files instead)
-   - Remove "why", keep "what" and "how"
-   - Remove example values when pattern is obvious
-   - IMPORTANT/CRITICAL only for genuinely dangerous pitfalls
-   - Ephemeral status -> reference PROGRESS.md or TODO.md
-   - Completed items -> remove or archive to CHANGELOG.md
-   - Deduplicate across file hierarchy (keep in most specific scope)
+---
 
-5. **Move content to reference files:**
-   - Credentials -> `~/.config/claude/credentials.md`
-   - Framework patterns -> `~/.config/claude/patterns.md`
-   - Project conventions -> `~/.config/claude/{project}.md`
-   - Architecture decisions -> project `docs/ADR/` or `ARCHITECTURE.md`
+## Phase 1: CLAUDE.md Audit
 
-6. **Show before/after comparison:**
-   ```
-   File                Before (tokens)   After (tokens)   Reduction
-   ~/CLAUDE.md              8,500            1,800           79%
-   ./CLAUDE.md              3,500              900           74%
-   Total auto-loaded       12,000            2,700           78%
-   ```
+### Files to check
+- `~/CLAUDE.md` (global)
+- `./CLAUDE.md` (project)
+- `./CLAUDE.local.md` (if present)
 
-### Phase 2: Session Context Compaction
+### Report format
+```
+File               Lines   Est. Tokens   Status
+~/CLAUDE.md          72       900        ✓ healthy
+./CLAUDE.md         180     2,200        ⚠ 3 bloat patterns found
+```
 
-For chatty/long-running projects, also optimize what persists between sessions:
+### TOON rules (apply to each file)
+- Bullets/phrases over full sentences
+- Inline commands: `Dev: npm run dev` not fenced code blocks
+- Tables for paths, credentials, structured data
+- No "why" explanations — keep "what" and "how"
+- No example values when the pattern is obvious
+- IMPORTANT/CRITICAL/⚠️ reserved for genuinely destructive pitfalls
+- Ephemeral status → PROGRESS.md, not CLAUDE.md
+- Completed items → remove or git ref, not kept as context
 
-7. **Audit project state files:**
-   - Check for `PROGRESS.md`, `TODO.md`, `openprojects.md` entries
-   - Identify stale status (completed work still marked pending)
-   - Flag verbose session logs that should be summarized
-   - Check `docs/` for redundant or outdated documentation
+### What belongs where
+| Content | Correct location |
+|---------|-----------------|
+| Commands + rules | CLAUDE.md |
+| Current sprint state | PROGRESS.md |
+| Credentials / API keys | `~/.config/claude/credentials.md` |
+| Framework gotchas | `~/.config/claude/patterns.md` |
+| Project conventions | `~/.config/claude/{project}.md` |
+| Architecture decisions | `docs/ADR/` or `ARCHITECTURE.md` |
+| Completed work | Git commit message — not CLAUDE.md |
 
-8. **Create/update PROGRESS.md** (project root):
-   - Current state: what's working, what's not
-   - Next steps: ordered, actionable items only
-   - Key decisions made (1-line each, not full rationale)
-   - Known issues: bug + workaround, no backstory
-   - Remove anything already reflected in code/commits
+---
 
-9. **Prune session artifacts:**
-   - Suggest removing large generated reports from CLAUDE.md context (reference file paths instead)
-   - Suggest `.claudeignore` entries for large data dirs, logs, generated output
-   - Identify files that auto-load into context but rarely change
+## Phase 2: Session Artifact Audit
 
-10. **Generate `.claudeignore`** if beneficial:
-    - Large data directories (data/, logs/, node_modules/, dist/)
-    - Generated reports (docs/reports/*.md if >50 files)
-    - Binary files, images, PDFs
-    - Test fixtures and snapshots
+### Working directory (`working/`)
+- PDFs and AI comparison docs are read-once reference material
+- If the session already extracted the relevant decisions: suggest `.claudeignore` entry or move to `docs/`
+- Flag any `working/` files >30 days old with no recent reference
 
-### Phase 3: Cross-Session Bridge
+### Code review sessions (`code-review/`)
+- Each session is a snapshot in time; only the latest TODO file matters
+- Older sessions: compress to one line in MEMORY.md index (`code-review/2026-04-20 — GREEN, 153 suites, action plan: TODO_2026-04-20.md`)
+- Never keep full prior-session review docs in active context
 
-11. **Ensure session continuity without bloat:**
-    - PROGRESS.md has current state (< 50 lines)
-    - CLAUDE.md has commands + rules only (no status)
-    - Reference files have domain knowledge (loaded on demand)
-    - `.claudeignore` excludes noise from context
-    - `openprojects.md` entry is current
+### Session context docs (`docs/SESSION_CONTEXT_*.md`, `docs/FIXES_*.md`)
+- These should be single-session artifacts, not persistent context
+- After the session they document is complete: move key decisions to MEMORY.md, delete or archive the file
+- Flag any that are >7 days old
 
-## TOON Quick Reference
+### Memory system (`memory/MEMORY.md`)
+- Check if MEMORY.md index is approaching 200-line limit (truncation threshold)
+- Identify entries that are now stale (code they reference may have changed)
+- Consolidate related single-line entries into topic files where they exist
+- Verify pointers in MEMORY.md still point to existing files
 
-| Pattern | Before | After |
-|---------|--------|-------|
-| Command docs | ```\nnpm run dev\n``` | `Dev: npm run dev` |
-| Status | "We completed the migration of..." | `Migration: done` |
-| Paths | Full paragraph explaining location | Table: `Project \| Path \| Stack` |
-| Decisions | 3-paragraph rationale | `Auth: JWT (not sessions) — stateless API` |
-| Code samples | 20-line example | `Pattern: see src/lib/auth.ts:45` |
-| Warnings | "IMPORTANT: You must never..." | `NEVER: force-push to main` |
+---
+
+## Phase 3: Phase-Transition Compression
+
+Apply these rules based on the detected phase:
+
+### Planning → Code transition
+- PM plan written, now implementing: compress plan reference to `(see docs/FEATURE-NAME-PLAN.md)`
+- Feedback response docs: verify they're committed, then they're git history — not session context
+- Keep: file paths of files to be created/modified, API contracts from Addenda
+
+### Code → Tests transition
+- Implementation complete, PR open: compress code details to `(PR #N, commit abc1234)`
+- The code is now in git — no need to keep implementation notes in context
+- Keep: test file paths to create, coverage gaps identified
+
+### Tests → Review/Docs transition
+- Tests passing: compress to `N suites / N tests — all green (commit abc1234)`
+- Keep: PR description draft, items for MEMORY.md, roadmap updates needed
+
+### Review → Idle transition
+- PR merged: compress everything to git ref + MEMORY.md entry
+- Archive or delete SESSION_CONTEXT docs
+- Update PROGRESS.md to reflect new baseline
+
+---
+
+## Phase 4: `.claudeignore` Recommendations
+
+Suggest entries based on project type:
+
+```
+# Always ignore
+node_modules/
+.next/
+dist/
+*.tsbuildinfo
+
+# Large generated output
+code-review/20*/0[2-9]-*.md    # Keep only 00-EXECUTIVE-SUMMARY and TODO from old reviews
+working/*.pdf                  # PDFs are read-once; don't re-load every session
+backups/
+
+# Test artifacts
+coverage/
+playwright-report/
+```
+
+---
+
+## Phase 5: PROGRESS.md Sync
+
+Ensure `PROGRESS.md` exists and is current (< 50 lines):
+
+```markdown
+# PROGRESS — YYYY-MM-DD
+
+## Current State
+- Branch: [branch] → [target]
+- Open PRs: #N ([title])
+- Tests: N suites / N tests
+
+## Next Actions (ordered)
+1. ...
+2. ...
+
+## Known Issues
+- [issue] — [workaround]
+
+## Recently Completed (last 7 days)
+- [item] — commit [hash]
+```
+
+---
+
+## Phase 6: Report
+
+```
+## Compact-Claude Report — YYYY-MM-DD
+Phase detected: [phase]
+
+### CLAUDE.md
+Before: N lines / ~N tokens
+After:  N lines / ~N tokens  (N% reduction)
+
+### Session Artifacts
+- Archived: [list]
+- Flagged for deletion: [list]
+- .claudeignore entries added: [N]
+
+### Memory System
+- MEMORY.md: N lines (limit 200) — [healthy / ⚠ approaching limit]
+- Stale entries updated: [N]
+
+### PROGRESS.md
+[created / updated / already current]
+
+### Recommended next action
+[one sentence]
+```
+
+---
 
 ## Key Principle
-Auto-loaded files should contain only what's needed in EVERY session. Everything else: reference files (on-demand), PROGRESS.md (current state), or code itself (the best documentation).
 
-## Reference File Locations
-- `~/.config/claude/credentials.md` - API keys, tokens, connection strings
-- `~/.config/claude/patterns.md` - Framework gotchas and patterns
-- `~/.config/claude/schoolvision.md` - SchoolVision conventions
-- Project `PROGRESS.md` - Current state and next steps
-- Project `.claudeignore` - Exclude noisy dirs from context
+**Git is the best compressor.** Once work is committed, replace all in-context notes about it with a commit hash. A 2000-token implementation discussion compresses to `feat(dashboard-v9): last-active-day fallback (commit 3bb04b6)` — 10 tokens, full fidelity via `git show`.
+
+Auto-loaded files contain only what's needed in *every* session. Everything else: reference files (on-demand), PROGRESS.md (current state), or git (completed work).

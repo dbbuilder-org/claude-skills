@@ -57,9 +57,30 @@ Before writing any documents, thoroughly explore the codebase:
 
 Capture all discovery findings before proceeding to Phase 2.
 
-### Phase 2: Deep Analysis (Parallel Agents)
+### Phase 2: Deep Analysis (Serial, Context-Managed)
 
-Launch Task agents in parallel to write each document. Each agent should be given the discovery context and told to READ the actual source files to verify every finding. Every finding MUST include:
+Write each document **one at a time** in the order listed below. Do NOT launch parallel agents — run each document in the main context to preserve findings and avoid context loss between documents.
+
+**Document order:**
+1. APPENDIX-A-FILE-INVENTORY.md — establish project metrics and key file list
+2. APPENDIX-B-NPM-AUDIT.md — run audit, capture raw output
+3. 01-SECURITY-REVIEW.md
+4. 02-ARCHITECTURE-REVIEW.md
+5. 03-CODE-QUALITY-REVIEW.md
+6. 04-TESTING-REVIEW.md
+7. 05-DEPLOYMENT-INFRA-REVIEW.md
+8. 07-STRENGTHS-AND-COMMENDATIONS.md
+9. 08-UI-UX-REVIEW.md
+10. 09-FEATURE-COMPLETENESS.md
+11. 06-TECHNICAL-DEBT-BACKLOG.md — consolidate findings from all documents above
+
+**Context management rules:**
+- After writing each document, record a 1-2 line finding summary in a running mental tally (counts per severity) before moving to the next document.
+- Before writing 06-TECHNICAL-DEBT-BACKLOG.md, re-read all completed documents to extract every finding ID. Do not rely on memory alone.
+- Keep each document write focused: read only the source files needed for that domain (security reads auth/config files; architecture reads module/service files; etc.).
+- If context is getting long, write the current document to disk before reading more source files — don't hold large file contents and draft output simultaneously.
+
+Every finding MUST include:
 - Specific file paths and line numbers
 - Actual code snippets from the source
 - Severity rating (CRITICAL / HIGH / MEDIUM / LOW)
@@ -67,7 +88,7 @@ Launch Task agents in parallel to write each document. Each agent should be give
 
 ### Phase 3: Synthesis
 
-Write the executive summary last, after all other documents are complete. Cross-reference findings across documents. Produce the final summary table.
+Write the executive summary (00-EXECUTIVE-SUMMARY.md) last, after all other documents are complete. Re-read 06-TECHNICAL-DEBT-BACKLOG.md to pull accurate counts. Cross-reference findings across documents. Produce the final summary table.
 
 ### Phase 4: Distillation (Action Plan)
 

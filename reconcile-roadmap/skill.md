@@ -254,6 +254,19 @@ Reconciliation complete:
 - Committed: <hash> pushed to origin/main
 ```
 
+### Step 10: Linear hand-off (30 sec)
+
+The reconciled roadmap just changed the planning truth — mirror it to Linear
+via the `/linear-sync` skill (idempotent, marker-based, never duplicates).
+
+- **Interactive session:** ask the user — "Roadmap reconciled. Push the updated
+  backlog to Linear now? (/linear-sync)" — and run it on yes.
+- **Autonomous/overnight run:** don't block on a prompt — run `/linear-sync`
+  automatically (it is idempotent and capped at 30 mutations) and include the
+  created/updated issue identifiers in the report.
+- Skip silently only if the project has no Linear project AND the user has
+  never synced it (first-time project setup is the user's call).
+
 ---
 
 ## Document Types to Find

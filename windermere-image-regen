@@ -1,0 +1,58 @@
+Check and manage Windermere Cloudflare product image regeneration.
+
+## What this skill does
+
+Checks progress on the Windermere CF image regeneration scripts, restarts them if stopped, and rebuilds the review gallery.
+
+## Step 1 — Check status
+
+```bash
+python3 -c "
+import json, os
+for label, path in [('Batch 1 (v1)', '/tmp/windermere-regen-progress.json'), ('Batch 2 (v2)', '/tmp/windermere-regen-v2-progress.json')]:
+    if os.path.exists(path):
+        p = json.load(open(path))
+        print(f'{label}: Done={len(p[\"done\"])} Failed={len(p[\"failed\"])}')
+        if p['failed']: print(f'  Failed: {p[\"failed\"][:5]}')
+    else:
+        print(f'{label}: not started')
+"
+pgrep -f generate-windermere-images && echo "process running" || echo "process stopped"
+```
+
+## Step 2 — Restart if stopped
+
+If v2 not finished:
+```bash
+# Clear failures for retry
+python3 -c "
+import json
+p = json.load(open('/tmp/windermere-regen-v2-progress.json'))
+p['failed'] = []
+json.dump(p, open('/tmp/windermere-regen-v2-progress.json', 'w'), indent=2)
+"
+# Start in background
+cd /tmp && python3 /tmp/generate-windermere-images-v2.py >> /tmp/windermere-regen-v2.log 2>&1 &
+```
+
+## Step 3 — Rebuild gallery and open
+
+```bash
+python3 /tmp/build-gallery.py && open /tmp/windermere-gallery.html
+```
+
+## Key facts
+
+- **Batch 1 script:** `/tmp/generate-windermere-images.py` (718 products, first bad list)
+- **Batch 2 script:** `/tmp/generate-windermere-images-v2.py` (679 products, stronger prompts)
+- **CF account hash:** `Evc8v3QiTuuXFNXzX2AbZg`
+- **CF account ID:** `54150df60cfd345cc5630e3610842213`
+- **Rate:** ~1.2s per image; 679 images ≈ 14 minutes
+- See memory file `project_cf_image_regen.md` for full credentials and restart patterns
+
+## If user sends a new bad list
+
+1. Write a new version of `/tmp/generate-windermere-images-v2.py` with updated `BAD_LIST`
+2. Use a new progress file (e.g. `/tmp/windermere-regen-v3-progress.json`)
+3. Use the strong IMAGE_CONTEXT: photorealistic, e-commerce, white background, NOT illustration
+4. Route prompts by category — see v2 script's `gemini_prompt()` and `_color()` helpers
