@@ -73,11 +73,17 @@ The fixed check matrix. Every audit runs every dimension; skips must be ⬜ N/A 
 - [AUTO] Monitor exists for the audited product's user-facing domains + critical API endpoints (BetterStack `GET /api/v2/monitors`, vault token). Monitors on a SIBLING domain (e.g. the app domain when auditing the marketing domain) count as 🟡 for this product — note both
 - [AUTO] Status page? Heartbeats for cron-like jobs?
 - [MANUAL] Alert routing: who gets paged — betterstack.com → Integrations
+- [ASK] On-call: PagerDuty rotation live — weekly primary+secondary (D8/D13)? Who receives this product's pages this week? (org-level: answer once per audit run, applies to all products)
 
 ## 13 · CI/CD & repo health
 - [AUTO] `gh api repos/<owner>/<repo>` — CI workflows present + passing on default branch; tests run in CI (not just locally)
 - [AUTO] Dependabot: `gh api repos/<owner>/<repo>/dependabot/alerts --jq length` (baseline note, dated 2026-07-20: fireproof had 17 open incl 5 high — compare against the LIVE count, don't echo the baseline)
 - [AUTO] Branch protection on default branch
+- [AUTO] Renovate enabled on the repo (`renovate.json` / org app, D17) — Dependabot alert counts without an update cadence = 🟡
+- [AUTO] Paved-road substrate (org-level, once per run): org rulesets + shared CI workflows + stack templates exist (D16) — `gh api orgs/<org>/rulesets`
+- [ASK] Portfolio tier (A/B/C, D15) recorded for this product? Tier sets gate depth, testing floor (D19), and launch-calendar slot (D20) — unrecorded tier = 🟡 (org-level gap: the tiering meeting)
+- [AUTO] `AGENTS.md` at the repo root (D24, doctrine-as-code carrier) — present + names the product's sanctioned-set slice/tier/market overlay? Missing on an active repo = 🟡 (`devops/docs/13`)
+- [AUTO] Golden-state enforcement (D25): lint/static-analysis config present and running in CI (not just committed) — deviations from the sanctioned set should fail a check, not surface later. Config absent = 🟡
 - [ASK] Most recent production launch/major release: was the go-live gate run (`gtm-bible/devops/GO-LIVE-CHECKLIST.md` attached to the shipping PR/issue, risk tier recorded)? Never-run gate on a shipped product = 🟡; config-only changes still need the 5-Q fast path
 
 ## 14 · Security & legal surface
@@ -85,7 +91,12 @@ The fixed check matrix. Every audit runs every dimension; skips must be ⬜ N/A 
 - [AUTO] `/privacy` `/terms` (+ `/accessibility` where relevant) live and 200
 - [AUTO] CAN-SPAM readiness: physical mailing address available for email footers? (grep site/docs; else [ASK])
 - [AUTO] No secrets committed (grep repo for key patterns); vault rows exist for the tokens the brand's CURRENT program state needs (a missing token for a not-yet-started program = ⬜ noted, not ❌)
-- [ASK] Vault hardening: is the plaintext credentials file due for migration to a password manager (file becomes pointers)?
+- [ASK] Vault hardening (D23): this brand's rows in `~/.config/claude/credentials.md` migrated to 1Password Teams shared vaults, file down to pointers? Plaintext rows remaining = 🟡
+- [AUTO] Secrets projection model (D26/D27, `devops/docs/14`): repo commits a `.env.op` (secret references) and NO real `.env`/plaintext secrets; dev command runs via `op run`. A committed plaintext `.env` or hand-authored platform env not traceable to 1Password = 🟡
+- [ASK] `proj-<brand>` 1Password vault + its dev/CI service accounts exist and are rows in `ACCESS.md`; platform env store (Vercel/Render) is a CI-pushed projection, not dashboard-edited?
+- [ASK] Network access (org-level, once per run): access to internal resources is identity-tied, not a shared-password VPN — Cloudflare One (WARP + Access) for user/roaming connectivity, Tailscale for private-DB access without port-opening (`devops/docs/10` §2); contractor access is per-app/tagged, not network-level, and revoked with offboarding?
+- [ASK] Access & auth (org-level, once per run): `ACCESS.md` rows exist for this product's systems (two admins min, named recovery owner); 2FA org-enforced; hardware keys on crown jewels (GitHub org, registrar, Azure, 1Password) — `devops/docs/10` §1–2
+- [ASK] Continuity (org-level, once per run): nightly repo mirror running; backup payment method on every vendor this product depends on; offboarding checklist walked once as a tabletop — `devops/docs/10` §3–5
 
 ## 15 · Payments & billing (if the product sells online)
 - [MANUAL] Stripe: products/prices mirror Attio `products`; webhook → (future) stage advance — dashboard.stripe.com
@@ -95,6 +106,7 @@ The fixed check matrix. Every audit runs every dimension; skips must be ⬜ N/A 
 - [AUTO] support@ resolves somewhere deliverable (dig MX + routing check)
 - [ASK] Support owner + target response time? Where do bugs from customers land (Linear? email?)
 - [ASK] DB-backed products: backup RESTORED at least once (not just "backups on"), and does a backup-failure alert fire? (go-live gate hard rule; ⬜ N/A for static sites)
+- [ASK] Lifecycle governance (`devops/docs/11`): product's lifecycle state recorded; quarterly portfolio review happening (kill criteria asked, drift sweep run)? Not yet started = 🟡 with the first review scheduled
 
 
 ## 17 · Phone, booking & in-app adoption (conversion chain — see OPERATIONS-STACK "The conversion chain")
