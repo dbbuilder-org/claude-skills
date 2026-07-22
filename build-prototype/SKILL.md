@@ -462,9 +462,30 @@ Expect `send-code` to return a token (and a real code to land in the inbox), the
 - ✅ Codes **expire** (10 min) and the token is bound to the exact email (`email-mismatch` rejected).
 - ✅ All crypto + sending runs server-side in the `nodejs` runtime — uses `randomInt` (CSPRNG), never `Math.random`.
 - ✅ Emails validated via bounded regex (no nested quantifiers — safe-regex friendly).
-- ✅ All user-controlled fields HTML-escaped before HTML interpolation; field length caps (email 254, role 32, name 80, demoAccount 254).
+- ✅ Internal alert is **plain text only** — user-controlled values are never interpolated into HTML (Bible decision 12; no custom `escapeHtml`). Field length caps (email 254, role 32, name 80, demoAccount 254).
 - ✅ Routes fail-soft — never throw into the login flow.
 - ✅ `From:` uses a verified Resend domain (`servicevision.io`) — never spoof user domains.
+
+---
+
+## Step 8.5: GTM paved-road alignment (the handoff contract)
+
+Every prototype is **stage one of the StartupVision lifecycle** (prototype → MVP → last mile → market). It must ship *toward* the 11-layer GTM machine so the GTM Sprint picks it up with zero rework. Full spec: `~/dev2/GTM-SaaS/docs/handoff/PAVED-ROAD-HANDOFF.md`. Apply all four:
+
+### 8.5a — Lead capture writes to Attio (the CRM is the source of truth)
+The OTP flow already captures a **verified, deliverable work email** — route that same lead into Attio so it enters the machine, not just an inbox. In the `verify-code` success path (server-side), upsert the person (first-touch `lead_source="StartupVision prototype"`) and add a `prototype_leads` list entry (`form_type="prototype-signup"`, `source_site="<PROJECT_NAME>.servicevision.io"`). Copy the `toAttio()` helper from the handoff contract (§"The load-bearing fix"). `ATTIO_API_KEY` from the vault → Vercel env. Never-lose-a-lead: if the key is missing or the call fails, log and continue — the email notify still fires. One-time: ensure the `prototype_leads` list exists (`setup-attio-brand.mjs`).
+
+### 8.5b — Internal alert is PLAIN TEXT only (fix the escapeHtml anti-pattern)
+Do **not** hand-roll `escapeHtml` and interpolate user-controlled values into an HTML email — Bible decision 12 forbids it (validation regexes admit `<`), and the house rule bans custom `escapeHtml`. **Send the login/lead alert as `text` only** (drop the `html` field). The values are already length-capped and email-validated; a plain-text alert carries them with zero injection surface. Remove the `escapeHtml` function.
+
+### 8.5c — Emit the paved-road stubs
+Copy from `~/dev2/GTM-SaaS/templates/paved-road/` into the project root, replacing `<PROJECT_NAME>`:
+- `AGENTS.md` — doctrine-as-code carrier (sanctioned stack, the load-bearing rules).
+- `GO-LIVE.md` — the go-live-gate stub the product clears before real launch.
+- Merge the `env.example` slots (`ATTIO_API_KEY`, `RESEND_API_KEY`, `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`, `NEXT_PUBLIC_POSTHOG_KEY`, `SENTRY_DSN`) into the project's `.env.example`.
+
+### 8.5d — Point visitors toward the lifecycle
+Add a subtle footer link — "Built by StartupVision · [take your product to market](https://gtm.startupvision.net)" — so a prospect exploring the prototype can flow into the GTM machine.
 
 ---
 
@@ -494,7 +515,9 @@ Output a clean summary block:
 | Vercel Project       | <VERCEL_DEPLOYMENT_URL> |
 | Vercel Project Name  | <PROJECT_NAME>-servicevision |
 | DNS Record           | CNAME <PROJECT_NAME> → cname.vercel-dns.com (proxied) |
-| Login Notify         | ✅ Resend → info@servicevision.io  (or N/A if no auth) |
+| Login Notify         | ✅ Resend (plain text) → info@servicevision.io  (or N/A if no auth) |
+| Attio lead capture   | ✅ prototype_leads (first-touch lead_source)  (or N/A) |
+| Paved-road stubs     | ✅ AGENTS.md · GO-LIVE.md · env slots · GTM footer link |
 
 ### Environment Variables Still Needing Real Values
 - List any vars in .env.example that still have placeholder values and need real secrets/keys
@@ -514,4 +537,4 @@ Output a clean summary block:
 5. **No placeholder content** — every page must look like a real product demo.
 6. **Typed code only** — TypeScript strict mode if onsiteIT uses TypeScript.
 7. **Deploy is non-optional** — complete all deployment steps; don't stop at local scaffold.
-8. **Login notification + verified work email are non-optional when there is a login** — if the prototype has any auth/sign-in screen, Step 8 must ship: a required work email verified by a 6-digit OTP (Resend + HMAC token) gating access, captured into the Resend notification (→ `info@servicevision.io`) alongside the demo persona. Pure marketing sites with no auth may skip it.
+8. **Login notification + verified work email are non-optional when there is a login** — if the prototype has any auth/sign-in screen, Step 8 must ship: a required work email verified by a 6-digit OTP (Resend + HMAC token) gating access, captured into the Resend notification (→ `info@servicevision.io`, **plain text**) alongside the demo persona, **and written to Attio** (`prototype_leads`, first-touch `lead_source`) per Step 8.5 — the CRM is the source of truth, the email is a secondary signal. Pure marketing sites with no auth may skip the OTP, but still apply Step 8.5c–d (stubs + lifecycle pointer).
