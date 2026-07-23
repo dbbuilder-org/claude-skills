@@ -16,9 +16,10 @@ The fixed check matrix. Every audit runs every dimension; skips must be ⬜ N/A 
 - [ASK] Any paid acquisition running that needs landing/UTM conventions?
 
 ## 3 · Analytics & attribution
-- [AUTO] Analytics ACTIVE in **live HTML** (gtag/GA4 id, Plausible, or Vercel Insights script) — source-code presence alone is ❌-adjacent 🟡 "coded, unconfigured" (check env: measurement ID set?)
+- [AUTO] Analytics ACTIVE in **live HTML** — standard is **self-hosted Plausible**: the script points at the portfolio instance (`analytics.<domain>`) AND the brand's domain is registered in that instance; source-code presence alone is ❌-adjacent 🟡 "coded, unconfigured" (GA4/Vercel Insights accepted as legacy). Deploy: `runbooks/PLAUSIBLE-SELFHOST-RUNBOOK.md`
 - [AUTO] UTM capture plumbing in repo (attribution composable/widget) and landing in CRM entries (Attio query for utm fields on recent entries)
 - [ASK] Are conversion events defined (demo request, tool signup) and reviewed anywhere?
+- [ASK] B2B visitor de-anonymization adopted for named-account reveal? (recommended 2026-07-22, not yet decided — US: RB2B/Vector; UK: Leadinfo/Dealfront/GDPR) — turns content readers into Attio account signals
 
 **Satellite/content brands** (e.g. a content property feeding a parent brand's list via `source_site`): dimension 4 entry checks filter by the attribution value; dimension 8 SKUs are ⬜ "parent brand's products" — score the plumbing, not phantom independence.
 
@@ -104,7 +105,7 @@ The fixed check matrix. Every audit runs every dimension; skips must be ⬜ N/A 
 
 ## 16 · Support & lifecycle
 - [AUTO] support@ resolves somewhere deliverable (dig MX + routing check)
-- [ASK] Support owner + target response time? Where do bugs from customers land (Linear? email?)
+- [ASK] Support owner + target response time? Is support@/info@ worked through a **shared team inbox** (Missive — assign/triage/close, internal comments) rather than a personal-inbox black hole? Where do bugs from customers land (Linear? email?)
 - [ASK] DB-backed products: backup RESTORED at least once (not just "backups on"), and does a backup-failure alert fire? (go-live gate hard rule; ⬜ N/A for static sites)
 - [ASK] Lifecycle governance (`devops/docs/11`): product's lifecycle state recorded; quarterly portfolio review happening (kill criteria asked, drift sweep run)? Not yet started = 🟡 with the first review scheduled
 
@@ -116,6 +117,7 @@ The fixed check matrix. Every audit runs every dimension; skips must be ⬜ N/A 
 - [AUTO] Booking webhook wired: a `server/api/webhooks/` route receives Cal.com bookings and advances the Attio entry — grep the repo, then confirm the webhook is registered (`GET /v2/webhooks`)
 - [AUTO] In-app adoption (Flows) on logged-in surfaces only: SDK plugin present in repo, `organizationId` in `runtimeConfig.public`, gated to app/tool routes — a Flows install on a *marketing* page is a FINDING (decision 14 scope violation), not a pass
 - [ASK] Which Flows experiences are published (dashboard-only knowledge): checklist? post-milestone booking prompt? survey? Do their webhooks write back to Attio via our route?
+- [AUTO] Content Factory blog CTA present on published pieces (if the brand is a CF tenant): booking CTA → per-brand Cal.com slug, OR lead CTA → CF `/api/v1/cta` route → Attio person + source note; attribution (`cf_tenant`/`cf_piece` + utm) carried. `ATTIO_API_KEY` set in CF env for lead CTAs
 
 ## 18 · Deliverability operations (the sending machine's instrument panel)
 - [MANUAL] Google Postmaster Tools: all sending domains (real + cousins) registered — postmaster.google.com
