@@ -1,0 +1,23 @@
+{
+  "skill_name": "human-review-prep",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm handing my feature branch off to Peter to review — it adds Stripe webhook handling and a couple new API routes. Can you prep it for him so he knows exactly what to look at and roughly how long it'll take? Open a PR and a Linear issue when you're done.",
+      "expected_output": "A REVIEW-PLAN.md scoped to the branch diff, each item with an action verb + why-a-human + reviewer-hour band, a cumulative time curve, a manager rollup, plus one PR and one Linear umbrella issue. Payment/webhook items flagged domain-risk (Senior owner).",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "We just finished a code-review on drivertrackaisite last week. My manager wants to know how much reviewer time it'll take to actually work through the findings and who should do which parts. Build the review plan from the existing review — don't re-scan the whole thing.",
+      "expected_output": "Consumes the existing code-review/<date>/ findings instead of re-running analysis; produces per-tier and per-owner-profile hour rollups, a time curve, and a manager-facing total with band. One Linear issue + PR.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "get this repo ready for a human reviewer — full project, and also go ahead and apply the safe cleanups so they don't have to wade through noise",
+      "expected_output": "Full-project scope (--full), applies only the trivially-safe mechanical refactors into the branch and lists them separately in the PR body as 'please sanity-check', keeps judgment-heavy refactors as REFACTOR/DECIDE reviewer cards. Read-only items still estimated with the curve.",
+      "files": []
+    }
+  ]
+}
